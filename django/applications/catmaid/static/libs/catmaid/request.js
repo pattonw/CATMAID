@@ -60,16 +60,16 @@ var RequestQueue = function(originUrl, csrfToken)
     // Accept all content types as response. This is needed to not have Firefox
     // add its own defaults, which in turn triggers Django Rest Framework in the
     // back-end to return a website for views it covers.
-    if (!item.headers["Accept"]) xmlHttp.setRequestHeader( "Accept", "*/*" );
-    if (!item.headers["X-Requested-With"]) xmlHttp.setRequestHeader( "X-Requested-With", "XMLHttpRequest");
+    if (!("Accept" in item.headers)) xmlHttp.setRequestHeader( "Accept", "*/*" );
+    if (!("X-Requested-With" in item.headers)) xmlHttp.setRequestHeader( "X-Requested-With", "XMLHttpRequest");
     if ( item.method == "POST" || item.method == "PUT" )
     {
-      if (!item.headers["Content-type"]) xmlHttp.setRequestHeader( "Content-type", "application/x-www-form-urlencoded" );
+      if (!("Content-type" in item.headers)) xmlHttp.setRequestHeader( "Content-type", "application/x-www-form-urlencoded" );
       // xmlHttp.setRequestHeader( "Content-length", queue[ 0 ].data.length );
       // xmlHttp.setRequestHeader( "Connection", "close" );
     }
     if (!RequestQueue.csrfSafe(item.method) && sameOrigin(item.request)) {
-      if (!item.headers["X-CSRFToken"]) xmlHttp.setRequestHeader('X-CSRFToken', csrfToken);
+      if (!("X-CSRFToken" in item.headers)) xmlHttp.setRequestHeader('X-CSRFToken', csrfToken);
     }
 
     // Allow custom response types
@@ -77,10 +77,10 @@ var RequestQueue = function(originUrl, csrfToken)
 
     // Add extra headers
     for (var headerName in extraHeaders) {
-      if (!item.headers[headerName]) xmlHttp.setRequestHeader(headerName, extraHeaders[headerName]);
+      if (!(headerName in item.headers)) xmlHttp.setRequestHeader(headerName, extraHeaders[headerName]);
     }
     for (var headerName in item.headers) {
-      xmlHttp.setRequestHeader(headerName, item.headers[headerName]);
+      if (item.headers.headerName !== null && item.headers.headerName !== undefined) xmlHttp.setRequestHeader(headerName, item.headers[headerName]);
     }
     xmlHttp.onreadystatechange = callback;
     xmlHttp.send( item.data );
@@ -266,6 +266,9 @@ RequestQueue.encodeArray = function( a, p ) {
 
 RequestQueue.encodeObject = function( o, p )
 {
+  if (o instanceof FormData) {
+    return o;
+  }
   var q = "";
   for ( var k in o )
   {

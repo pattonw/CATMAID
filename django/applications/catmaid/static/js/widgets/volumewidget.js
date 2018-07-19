@@ -584,15 +584,11 @@
       data.append(file.name, file, file.name);
     });
     return new Promise(function(resolve, reject) {
-      $.ajax({
-          url : CATMAID.makeURL(project.id + "/volumes/import"),
-          processData : false,
-          contentType : false,
-          type : 'POST',
-          data : data,
-      }).done(function(data) {
+      CATMAID.fetch(project.id + "/volumes/import", "POST", data, undefined, undefined, undefined, undefined, {"Content-type" : null})
+        .then(function(data){
           self.redraw();
-      });
+        })
+        .catch(CATMAID.handleError);
     });
   };
 
