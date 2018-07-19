@@ -60,18 +60,16 @@ var RequestQueue = function(originUrl, csrfToken)
     // Accept all content types as response. This is needed to not have Firefox
     // add its own defaults, which in turn triggers Django Rest Framework in the
     // back-end to return a website for views it covers.
-    xmlHttp.setRequestHeader( "Accept", "*/*" );
-    xmlHttp.setRequestHeader( "X-Requested-With", "XMLHttpRequest");
+    if (!item.headers["Accept"]) xmlHttp.setRequestHeader( "Accept", "*/*" );
+    if (!item.headers["X-Requested-With"]) xmlHttp.setRequestHeader( "X-Requested-With", "XMLHttpRequest");
     if ( item.method == "POST" || item.method == "PUT" )
     {
-      xmlHttp.setRequestHeader( "Accept", "*/*" );
-      xmlHttp.setRequestHeader( "Content-type", "application/x-www-form-urlencoded" );
+      if (!item.headers["Content-type"]) xmlHttp.setRequestHeader( "Content-type", "application/x-www-form-urlencoded" );
       // xmlHttp.setRequestHeader( "Content-length", queue[ 0 ].data.length );
       // xmlHttp.setRequestHeader( "Connection", "close" );
     }
-    xmlHttp.setRequestHeader( "X-Requested-With", "XMLHttpRequest" );
     if (!RequestQueue.csrfSafe(item.method) && sameOrigin(item.request)) {
-      xmlHttp.setRequestHeader('X-CSRFToken', csrfToken);
+      if (!item.headers["X-CSRFToken"]) xmlHttp.setRequestHeader('X-CSRFToken', csrfToken);
     }
 
     // Allow custom response types
@@ -79,7 +77,7 @@ var RequestQueue = function(originUrl, csrfToken)
 
     // Add extra headers
     for (var headerName in extraHeaders) {
-      xmlHttp.setRequestHeader(headerName, extraHeaders[headerName]);
+      if (!item.headers[headerName]) xmlHttp.setRequestHeader(headerName, extraHeaders[headerName]);
     }
     for (var headerName in item.headers) {
       xmlHttp.setRequestHeader(headerName, item.headers[headerName]);
@@ -147,6 +145,7 @@ var RequestQueue = function(originUrl, csrfToken)
         headers
     )
     {
+      headers = headers || {};
       switch( m )
       {
       case "POST":
@@ -159,7 +158,7 @@ var RequestQueue = function(originUrl, csrfToken)
             callback : c,
             id : id,
             responseType: responseType,
-            headers: headers || {}
+            headers: headers
           }
         );
         break;
@@ -177,7 +176,7 @@ var RequestQueue = function(originUrl, csrfToken)
             callback : c,
             id : id,
             responseType: responseType,
-            headers: headers || {}
+            headers: headers
           }
         );
       }
