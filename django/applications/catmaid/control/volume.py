@@ -373,10 +373,11 @@ def volume_collection(request, project_id):
                 )
             GROUP BY v.id
             """, {'pid': project_id})
-        return JsonResponse({
-            'columns': [r[0] for r in cursor.description],
-            'data': cursor.fetchall()
-        })
+
+        # todo: replace with {"columns": [...], "data": [[...], ...]} pattern?
+        columns = [r[0] for r in cursor.description]
+        return JsonResponse([dict(zip(columns, row)) for row in cursor.fetchall()], safe=False)
+
 
 def get_volume_details(project_id, volume_id):
     cursor = connection.cursor()

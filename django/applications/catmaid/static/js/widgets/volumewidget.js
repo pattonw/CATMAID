@@ -166,8 +166,8 @@
 
             CATMAID.fetch(project.id +  "/volumes/")
               .then(function(volumeData) {
-                let volumes = volumeData.data.map(function(volume) {
-                  return new CATMAID.Volume(CATMAID.tools.buildObject(volumeData.columns, volume));
+                let volumes = volumeData.map(function(volume) {
+                  return new CATMAID.Volume(volume);
                 });
                 callback({
                   draw: data.draw,
