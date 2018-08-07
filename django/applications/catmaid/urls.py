@@ -17,7 +17,8 @@ from catmaid.control import (authentication, user, log, message, client, common,
         cropping, data_view, ontology, classification, notifications, roi,
         clustering, volume, noop, useranalytics, user_evaluation,
         search, graphexport, transaction, graph2, circles, analytics, review,
-        wiringdiagram, object, sampler, nat, point, landmarks)
+        wiringdiagram, object, sampler, nat, point, landmarks, 
+        floodfilling)
 
 from catmaid.views import CatmaidView
 from catmaid.history import record_request_action as record_view
@@ -309,6 +310,11 @@ urlpatterns += [
     url(r'^(?P<project_id>\d+)/skeletons/compact-detail$', skeletonexport.compact_skeleton_detail_many),
     # Marked as deprecated, but kept for backwards compatibility
     url(r'^(?P<project_id>\d+)/(?P<skeleton_id>\d+)/(?P<with_connectors>\d)/(?P<with_tags>\d)/compact-skeleton$', skeletonexport.compact_skeleton),
+]
+
+# Skeleton flood filling
+urlpatterns += [
+    url(r'^flood-fill$', floodfilling.flood_fill_skeleton),
 ]
 
 # Treenode and Connector image stack archive export
