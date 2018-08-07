@@ -22,12 +22,29 @@ output_path = os.path.join(settings.MEDIA_ROOT, settings.MEDIA_EXPORT_SUBDIRECTO
 
 
 # @requires_user_role(UserRole.Annotate)
-def flood_fill_skeleton(response):
-    return JsonResponse({"success": True, "script":flood_fill()})
+def flood_fill_skeleton(request):
+    """
+    Flood fill a skeleton. Necessary information:
+    Server configuration
+    volume toml
+    model toml
+    """
+    for i in range(10):
+        print("")
+    for uploadedfile in request.FILES.values():
+        for i in range(10):
+            print("size: ")
+            print(uploadedfile.size)
+    for i in range(10):
+        print("")
+    return JsonResponse({x: request.POST[x] for x in request.POST})
 
 
 @task()
 def flood_fill_async():
+    """
+    Connect to the server and run the script
+    """
     return None
 
 

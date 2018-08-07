@@ -7,22 +7,19 @@ CATMAID.tools = CATMAID.tools || {};
 /**
  * Definition of methods in CATMAID.tools namespace.
  */
-(function(tools) {
-
-  "use strict";
-
+(function (tools) {
+  'use strict';
   /**
    * Does a simple user agent test and returns one of 'MAC', 'WIN', 'LINUX' or
    * 'UNKNOWN'.
    */
-  tools.getOS = function()
-  {
-    var ua = navigator.userAgent.toUpperCase();
-    if (-1 !== ua.indexOf('MAC')) {
+  tools.getOS = function () {
+    var ua = navigator.userAgent.toUpperCase ();
+    if (-1 !== ua.indexOf ('MAC')) {
       return 'MAC';
-    } else if (-1 !== ua.indexOf('WIN')) {
+    } else if (-1 !== ua.indexOf ('WIN')) {
       return 'WIN';
-    } else if (-1 !== ua.indexOf('LINUX')) {
+    } else if (-1 !== ua.indexOf ('LINUX')) {
       return 'LINUX';
     } else {
       return 'UNKNOWN';
@@ -34,15 +31,14 @@ CATMAID.tools = CATMAID.tools || {};
    * essentially a wrapper around String.localeCompare() to have one
    * place where it is parameterized.
    */
-  tools.compareStrings = function(str1, str2)
-  {
-    return str1.localeCompare(str2, undefined, {numeric: true});
+  tools.compareStrings = function (str1, str2) {
+    return str1.localeCompare (str2, undefined, {numeric: true});
   };
 
   /**
    * Compare two numbers, can be used with sort().
    */
-  tools.compareNumbers = function(a, b) {
+  tools.compareNumbers = function (a, b) {
     return a - b;
   };
 
@@ -50,8 +46,7 @@ CATMAID.tools = CATMAID.tools || {};
    * Compare two objects that represent HSL colors. Sorting is done by hue, then
    * saturation then luminance.
    */
-  tools.compareHSLColors = function(hsl1, hsl2)
-  {
+  tools.compareHSLColors = function (hsl1, hsl2) {
     if (hsl1.h === hsl2.h) {
       if (hsl1.s === hsl2.s) {
         if (hsl1.l === hsl2.l) {
@@ -71,20 +66,19 @@ CATMAID.tools = CATMAID.tools || {};
    * Parse a string as integer or return false if this is not possible or the
    * integer is negative.
    */
-  tools.parseIndex = function(str) {
+  tools.parseIndex = function (str) {
     var pattern = /(\d+)$/;
-    if (pattern.test(str)) return parseInt(RegExp.$1);
-    else
-    return false;
+    if (pattern.test (str)) return parseInt (RegExp.$1);
+    else return false;
   };
 
   /**
    * Get a "unique" id for a new element in the DOM.
    */
   var UNIQUE_ID;
-  tools.uniqueId = function() {
+  tools.uniqueId = function () {
     if (!UNIQUE_ID) {
-      UNIQUE_ID = Math.floor(1073741824 * Math.random());
+      UNIQUE_ID = Math.floor (1073741824 * Math.random ());
     }
     return ++UNIQUE_ID;
   };
@@ -93,96 +87,93 @@ CATMAID.tools = CATMAID.tools || {};
    * Parse the query part of a URL and return an object containing all the GET
    * properties.
    */
-  tools.parseQuery = function(url) {
+  tools.parseQuery = function (url) {
     if (url) {
       var r, query;
       query = /\?(.*?)$/i;
-      var r = query.exec(url);
+      var r = query.exec (url);
       if (r) {
         var o, p, value;
         o = {};
         value = /([^&=]+)=([^&=]+)/gi;
-        while ((p = value.exec(r[1])) !== null) {
+        while ((p = value.exec (r[1])) !== null) {
           o[p[1]] = p[2];
         }
         return o;
-      } else
-      return undefined;
-    } else
-    return undefined;
+      } else return undefined;
+    } else return undefined;
   };
 
   /**
    * Simplify more robust prototype inheritance. From:
    * http://michaux.ca/articles/class-based-inheritance-in-javascript
    */
-  tools.extend = function(subclass, superclass) {
-     function Dummy() {}
-     Dummy.prototype = superclass.prototype;
-     subclass.prototype = new Dummy();
-     subclass.prototype.constructor = subclass;
-     subclass.superclass = superclass;
-     subclass.superproto = superclass.prototype;
+  tools.extend = function (subclass, superclass) {
+    function Dummy () {}
+    Dummy.prototype = superclass.prototype;
+    subclass.prototype = new Dummy ();
+    subclass.prototype.constructor = subclass;
+    subclass.superclass = superclass;
+    subclass.superproto = superclass.prototype;
   };
 
   /**
    * Creates a deep copy of an object. Based on:
    * http://stackoverflow.com/questions/122102
    */
-  tools.deepCopy = function(obj) {
+  tools.deepCopy = function (obj) {
     // Handle the 3 simple types, and null or undefined
-    if (null === obj || "object" !== typeof obj) return obj;
+    if (null === obj || 'object' !== typeof obj) return obj;
 
     // Handle Date
     if (obj instanceof Date) {
-        var copy = new Date();
-        copy.setTime(obj.getTime());
-        return copy;
+      var copy = new Date ();
+      copy.setTime (obj.getTime ());
+      return copy;
     }
 
     // Handle Array
     if (obj instanceof Array) {
-        var copy = [];
-        for (var i = 0, len = obj.length; i < len; i++) {
-            copy[i] = tools.deepCopy(obj[i]);
-        }
-        return copy;
+      var copy = [];
+      for (var i = 0, len = obj.length; i < len; i++) {
+        copy[i] = tools.deepCopy (obj[i]);
+      }
+      return copy;
     }
 
     // Handle Object
     if (obj instanceof Object) {
-        var copy = {};
-        for (var attr in obj) {
-            if (obj.hasOwnProperty(attr)) copy[attr] = tools.deepCopy(obj[attr]);
-        }
-        return copy;
+      var copy = {};
+      for (var attr in obj) {
+        if (obj.hasOwnProperty (attr)) copy[attr] = tools.deepCopy (obj[attr]);
+      }
+      return copy;
     }
 
-    throw new Error("Unable to copy obj! Its type isn't supported.");
+    throw new Error ("Unable to copy obj! Its type isn't supported.");
   };
 
   /**
    * Convert a (usually base64 encorded) dataURI image to a binary blob.
    * From: http://stackoverflow.com/questions/4998908
    */
-  tools.dataURItoBlob = function(dataURI) {
-      // convert base64/URLEncoded data component to raw binary data held in a string
-      var byteString;
-      if (dataURI.split(',')[0].indexOf('base64') >= 0)
-          byteString = atob(dataURI.split(',')[1]);
-      else
-          byteString = unescape(dataURI.split(',')[1]);
+  tools.dataURItoBlob = function (dataURI) {
+    // convert base64/URLEncoded data component to raw binary data held in a string
+    var byteString;
+    if (dataURI.split (',')[0].indexOf ('base64') >= 0)
+      byteString = atob (dataURI.split (',')[1]);
+    else byteString = unescape (dataURI.split (',')[1]);
 
-      // separate out the mime component
-      var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+    // separate out the mime component
+    var mimeString = dataURI.split (',')[0].split (':')[1].split (';')[0];
 
-      // write the bytes of the string to a typed array
-      var ia = new Uint8Array(byteString.length);
-      for (var i = 0; i < byteString.length; i++) {
-          ia[i] = byteString.charCodeAt(i);
-      }
+    // write the bytes of the string to a typed array
+    var ia = new Uint8Array (byteString.length);
+    for (var i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt (i);
+    }
 
-      return new Blob([ia], {type:mimeString});
+    return new Blob ([ia], {type: mimeString});
   };
 
   /**
@@ -196,49 +187,65 @@ CATMAID.tools = CATMAID.tools || {};
    * @param texture An optional texture object that will be read out if passed.
    * @return An image object of either the context or the texture (if passed).
    */
-  tools.createImageFromGlContext = function(gl, width, height, texture) {
-      var framebuffer;
-      if (texture) {
-        // Create a framebuffer backed by the texture
-        var framebuffer = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
-      }
+  tools.createImageFromGlContext = function (gl, width, height, texture) {
+    var framebuffer;
+    if (texture) {
+      // Create a framebuffer backed by the texture
+      var framebuffer = gl.createFramebuffer ();
+      gl.bindFramebuffer (gl.FRAMEBUFFER, framebuffer);
+      gl.framebufferTexture2D (
+        gl.FRAMEBUFFER,
+        gl.COLOR_ATTACHMENT0,
+        gl.TEXTURE_2D,
+        texture,
+        0
+      );
+    }
 
-      // Read the contents of the framebuffer
-      var data = new Uint8Array(width * height * 4);
-      gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, data);
+    // Read the contents of the framebuffer
+    var data = new Uint8Array (width * height * 4);
+    gl.readPixels (0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, data);
 
-      if (framebuffer) {
-        gl.deleteFramebuffer(framebuffer);
-      }
+    if (framebuffer) {
+      gl.deleteFramebuffer (framebuffer);
+    }
 
-      // Create a 2D canvas to store the result
-      var canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      var context = canvas.getContext('2d');
+    // Create a 2D canvas to store the result
+    var canvas = document.createElement ('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    var context = canvas.getContext ('2d');
 
-      // Copy the pixels to a 2D canvas
-      var imageData = context.createImageData(width, height);
-      imageData.data.set(data);
-      context.putImageData(imageData, 0, 0);
+    // Copy the pixels to a 2D canvas
+    var imageData = context.createImageData (width, height);
+    imageData.data.set (data);
+    context.putImageData (imageData, 0, 0);
 
-      var img = new Image();
-      img.src = canvas.toDataURL();
-      return img;
+    var img = new Image ();
+    img.src = canvas.toDataURL ();
+    return img;
   };
 
   /**
    * Copy from source[sourceField] to target[targetField] if and only if both
    * are defined.
    */
-  tools.copyIfDefined = function(source, target, sourceField, targetField, mapFn) {
+  tools.copyIfDefined = function (
+    source,
+    target,
+    sourceField,
+    targetField,
+    mapFn
+  ) {
     targetField = targetField || sourceField;
-    if (source && source.hasOwnProperty(sourceField) &&
-        target && target.hasOwnProperty(targetField)) {
-      if (CATMAID.tools.isFn(mapFn)) {
-        target[targetField] = mapFn(source[sourceField]);
+    if (
+      source &&
+      source.hasOwnProperty (sourceField) &&
+      target &&
+      target.hasOwnProperty (targetField)
+    ) {
+      if (CATMAID.tools.isFn (mapFn)) {
+        target[targetField] = mapFn (source[sourceField]);
       } else {
         target[targetField] = source[sourceField];
       }
@@ -252,9 +259,9 @@ CATMAID.tools = CATMAID.tools || {};
    * @param value The value x, y and z should be set to.
    * @return The passed in object obj.
    */
-  tools.setXYZ = function(obj, value) {
-      obj.x = obj.y = obj.z = value;
-      return obj;
+  tools.setXYZ = function (obj, value) {
+    obj.x = obj.y = obj.z = value;
+    return obj;
   };
 
   /**
@@ -263,8 +270,8 @@ CATMAID.tools = CATMAID.tools || {};
    * @param fn The entitiy to test.
    * @return True if fn is a function, false otherwise.
    */
-  tools.isFn = function(fn) {
-    return typeof(fn) === 'function';
+  tools.isFn = function (fn) {
+    return typeof fn === 'function';
   };
 
   /**
@@ -273,12 +280,12 @@ CATMAID.tools = CATMAID.tools || {};
    *
    * @param fn the entity to call
    */
-  tools.callIfFn = function(fn) {
-    if (CATMAID.tools.isFn(fn)) {
+  tools.callIfFn = function (fn) {
+    if (CATMAID.tools.isFn (fn)) {
       if (arguments.length > 1) {
-        fn.apply(window, Array.prototype.slice.call(arguments, 1));
+        fn.apply (window, Array.prototype.slice.call (arguments, 1));
       } else {
-        fn();
+        fn ();
       }
     }
   };
@@ -286,46 +293,48 @@ CATMAID.tools = CATMAID.tools || {};
   /**
    * Convert a hex color string to an RGB object.
    */
-  tools.hexToRGB = function(hex) {
+  tools.hexToRGB = function (hex) {
     // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
     // See http://stackoverflow.com/questions/5623838
     var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-    hex = hex.replace(shorthandRegex, function(m, r, g, b) {
-        return r + r + g + g + b + b;
+    hex = hex.replace (shorthandRegex, function (m, r, g, b) {
+      return r + r + g + g + b + b;
     });
 
-    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-    } : null;
+    var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec (hex);
+    return result
+      ? {
+          r: parseInt (result[1], 16),
+          g: parseInt (result[2], 16),
+          b: parseInt (result[3], 16),
+        }
+      : null;
   };
 
   /**
    * Convert any CSS color definition to RGB.
    */
-  tools.cssColorToRGB = function(cssColor) {
-    var c = new THREE.Color(cssColor);
+  tools.cssColorToRGB = function (cssColor) {
+    var c = new THREE.Color (cssColor);
     return {
       r: c.r,
       g: c.g,
-      b: c.b
+      b: c.b,
     };
   };
 
   /**
    * Convert RGB values between 0 and 255 to a hex representation.
    */
-  tools.rgbToHex = function(r, g, b) {
+  tools.rgbToHex = function (r, g, b) {
     // See http://stackoverflow.com/questions/5623838
-    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString (16).slice (1);
   };
 
   /**
    * Calculate an approximate lumance value from RGB values.
    */
-  tools.rgbToLuminance = function(r, g, b) {
+  tools.rgbToLuminance = function (r, g, b) {
     return 0.299 * r + 0.587 * g + 0.114 * b;
   };
 
@@ -334,13 +343,13 @@ CATMAID.tools = CATMAID.tools || {};
    * background of the given hex color. The heuristic is to use black if the
    * approximate luminance is above 50%.
    */
-  tools.getContrastColor = function(hex, getHex) {
-    var rgb = CATMAID.tools.hexToRGB(hex);
-    var lum = CATMAID.tools.rgbToLuminance(rgb.r, rgb.g, rgb.b);
+  tools.getContrastColor = function (hex, getHex) {
+    var rgb = CATMAID.tools.hexToRGB (hex);
+    var lum = CATMAID.tools.rgbToLuminance (rgb.r, rgb.g, rgb.b);
     if (getHex) {
-      return lum <= 128 ? "#ffffff" : "#000000";
+      return lum <= 128 ? '#ffffff' : '#000000';
     } else {
-      return lum <= 128 ? "white" : "black";
+      return lum <= 128 ? 'white' : 'black';
     }
   };
 
@@ -348,12 +357,22 @@ CATMAID.tools = CATMAID.tools || {};
    * Return the intersection of the line given by the two points with
    * a THREE.js plane.
    */
-  tools.intersectLineWithPlane = function(x1, y1, z1, x2, y2, z2, plane, target) {
-    var line = new THREE.Line3(
-        new THREE.Vector3(x1, y1, z1),
-        new THREE.Vector3(x2, y2, z2));
+  tools.intersectLineWithPlane = function (
+    x1,
+    y1,
+    z1,
+    x2,
+    y2,
+    z2,
+    plane,
+    target
+  ) {
+    var line = new THREE.Line3 (
+      new THREE.Vector3 (x1, y1, z1),
+      new THREE.Vector3 (x2, y2, z2)
+    );
 
-    return plane.intersectLine(line, target);
+    return plane.intersectLine (line, target);
   };
 
   /**
@@ -363,9 +382,8 @@ CATMAID.tools = CATMAID.tools || {};
    * @param b Second number to compare
    * @return true if a and b have the same sign, false otherwise.
    */
-  tools.sameSign = function(a, b)
-  {
-    return (a < 0) === (b < 0);
+  tools.sameSign = function (a, b) {
+    return a < 0 === b < 0;
   };
 
   /**
@@ -385,44 +403,61 @@ CATMAID.tools = CATMAID.tools || {};
     var DAY = 24 * HOUR;
 
     var formattedDate = function (date) {
-      return date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate();
+      return (
+        date.getFullYear () +
+        '-' +
+        (date.getMonth () + 1) +
+        '-' +
+        date.getDate ()
+      );
     };
 
     return function (isodate) {
-      var date = new Date(isodate);
+      var date = new Date (isodate);
       // ES5 interprets all ISO 8601 times without time zone as UTC, so should
       // adjust to local time automatically as long as the backend returns UTC.
-      var ago = Date.now() - date;
+      var ago = Date.now () - date;
 
       if (ago < MINUTE) {
-        return Math.round(ago / 1000) + ' seconds ago';
+        return Math.round (ago / 1000) + ' seconds ago';
       } else if (ago < HOUR) {
-        return Math.round(ago / MINUTE) + ' minutes ago';
+        return Math.round (ago / MINUTE) + ' minutes ago';
       } else if (ago < DAY) {
-        return 'at ' + formattedDate(date) + ' ' + date.toLocaleTimeString();
+        return 'at ' + formattedDate (date) + ' ' + date.toLocaleTimeString ();
       } else {
-        return 'on ' + formattedDate(date);
+        return 'on ' + formattedDate (date);
       }
     };
-  })();
+  }) ();
 
   /**
    * Return a string representation of a Date instance with the format
    * YYYY-MM-DD hh:mm:ss.
    */
-  tools.dateToString = function(d) {
-    var day = d.getDate();
+  tools.dateToString = function (d) {
+    var day = d.getDate ();
     if (day < 10) day = '0' + day;
-    var month = d.getUTCMonth() + 1; // 0-based
+    var month = d.getUTCMonth () + 1; // 0-based
     if (month < 10) month = '0' + month;
-    var hour = d.getHours();
+    var hour = d.getHours ();
     if (hour < 10) hour = '0' + hour;
-    var min = d.getMinutes();
+    var min = d.getMinutes ();
     if (min < 10) min = '0' + min;
-    var sec = d.getSeconds();
+    var sec = d.getSeconds ();
     if (sec < 10) sec = '0' + sec;
-    return d.getUTCFullYear() + '-' + month + '-' + day + ' ' +
-        hour + ":" + min + ":" + sec;
+    return (
+      d.getUTCFullYear () +
+      '-' +
+      month +
+      '-' +
+      day +
+      ' ' +
+      hour +
+      ':' +
+      min +
+      ':' +
+      sec
+    );
   };
 
   /**
@@ -432,81 +467,100 @@ CATMAID.tools = CATMAID.tools || {};
    * characters, microseconds are assumed. If it has three, millisconds are
    * assumed.
    */
-  tools.isoStringToDate = (function() {
+  tools.isoStringToDate = (function () {
     var isoRegEx = /^(\d{4})-0?(\d+)-0?(\d+)[T ]0?(\d+):0?(\d+):0?(\d+)(\.\d+)?Z$/;
-    return function(isoDate) {
-      var match = isoDate.match(isoRegEx);
+    return function (isoDate) {
+      var match = isoDate.match (isoRegEx);
       if (match) {
         if (match[7] === undefined) {
-          return new Date(Date.UTC(parseInt(match[1], 10), parseInt(match[2], 10) - 1,
-              parseInt(match[3], 10), parseInt(match[4], 10),
-              parseInt(match[5], 10), parseInt(match[6], 10)));
+          return new Date (
+            Date.UTC (
+              parseInt (match[1], 10),
+              parseInt (match[2], 10) - 1,
+              parseInt (match[3], 10),
+              parseInt (match[4], 10),
+              parseInt (match[5], 10),
+              parseInt (match[6], 10)
+            )
+          );
         } else {
-          var secFraction = match[7].substring(1);
+          var secFraction = match[7].substring (1);
           var denominator;
           if (secFraction.length === 6) {
             denominator = 1000;
           } else if (secFraction.length === 3) {
             denominator = 1;
           } else {
-            throw new CATMAID.ValueError("Can't parse seconds fraction of date");
+            throw new CATMAID.ValueError (
+              "Can't parse seconds fraction of date"
+            );
           }
-          return new Date(Date.UTC(parseInt(match[1], 10), parseInt(match[2], 10) - 1,
-              parseInt(match[3], 10), parseInt(match[4], 10),
-              parseInt(match[5], 10), parseInt(match[6], 10),
-              parseInt(secFraction, 10) / denominator));
+          return new Date (
+            Date.UTC (
+              parseInt (match[1], 10),
+              parseInt (match[2], 10) - 1,
+              parseInt (match[3], 10),
+              parseInt (match[4], 10),
+              parseInt (match[5], 10),
+              parseInt (match[6], 10),
+              parseInt (secFraction, 10) / denominator
+            )
+          );
         }
       } else {
         // Unable to parse date
         return null;
       }
     };
-  })();
+  }) ();
 
-  tools.numberSuffix = function(n) {
+  tools.numberSuffix = function (n) {
     return n > 1 ? 's' : '';
   };
 
   /**
    * Return a human readable form of an amount of milliseconds.
    */
-  tools.humanReadableTimeInterval = (function() {
-
-    var defaultTimeComponents = new Set(["sec", "min", "hours", "days"]);
+  tools.humanReadableTimeInterval = (function () {
+    var defaultTimeComponents = new Set (['sec', 'min', 'hours', 'days']);
     var msPerSecond = 1000;
     var msPerMinute = 60 * msPerSecond;
-    var msPerHour   = 60 * msPerMinute;
-    var msPerDay    = 24 * msPerHour;
+    var msPerHour = 60 * msPerMinute;
+    var msPerDay = 24 * msPerHour;
 
-    return function(ms, components) {
+    return function (ms, components) {
       components = components || defaultTimeComponents;
 
       var units = [];
       var values = [];
-      if (components.has("days")) {
-        units.push("d");
-        values.push(ms / msPerDay); ms %= msPerDay;
+      if (components.has ('days')) {
+        units.push ('d');
+        values.push (ms / msPerDay);
+        ms %= msPerDay;
       }
-      if (components.has("hours")) {
-        units.push("h");
-        values.push(ms / msPerHour); ms %= msPerHour;
+      if (components.has ('hours')) {
+        units.push ('h');
+        values.push (ms / msPerHour);
+        ms %= msPerHour;
       }
-      if (components.has("min")) {
-        units.push("min");
-        values.push(ms / msPerMinute); ms %= msPerMinute;
+      if (components.has ('min')) {
+        units.push ('min');
+        values.push (ms / msPerMinute);
+        ms %= msPerMinute;
       }
-      if (components.has("sec")) {
-        units.push("sec");
-        values.push(ms / msPerSecond); ms %= msPerSecond;
+      if (components.has ('sec')) {
+        units.push ('sec');
+        values.push (ms / msPerSecond);
+        ms %= msPerSecond;
       }
 
-      var pretty = "";
+      var pretty = '';
       var addedComponents = 0;
-      for (var i=0; i<values.length; ++i) {
-        var val = Math.floor(values[i]);
-        if(val <= 0) continue;
+      for (var i = 0; i < values.length; ++i) {
+        var val = Math.floor (values[i]);
+        if (val <= 0) continue;
         if (addedComponents > 0) {
-          pretty += " ";
+          pretty += ' ';
         }
 
         pretty += val + units[i];
@@ -516,12 +570,14 @@ CATMAID.tools = CATMAID.tools || {};
       // If there is no valid time representation found, state the passed in
       // value is smaller than the smallest available time unit.
       if (!pretty) {
-        pretty = "< "+ (values.length === 0 ? "infinity" : ("1" + units[units.length - 1]));
+        pretty =
+          '< ' +
+          (values.length === 0 ? 'infinity' : '1' + units[units.length - 1]);
       }
 
       return pretty;
     };
-  })();
+  }) ();
 
   /**
    * Escape a string so it can be used in a regular expression without
@@ -531,19 +587,19 @@ CATMAID.tools = CATMAID.tools || {};
    * @param  {string} text   The string to escape.
    * @return {string}        A new escaped string.
    */
-  tools.escapeRegEx = (function() {
+  tools.escapeRegEx = (function () {
     // All characters that should be replaced
     var pattern = /[-[\]{}()*+?.,\\^$|#\s]/g;
-    return function(text) {
-      return text.replace(pattern, "\\$&");
+    return function (text) {
+      return text.replace (pattern, '\\$&');
     };
-  })();
+  }) ();
 
   /**
    * Returns a new object having a field named after the parameter object's id
    * field and referencing it.
    */
-  tools.idMap = function(obj) {
+  tools.idMap = function (obj) {
     var o = {};
     o[obj.id] = obj;
     return o;
@@ -553,17 +609,16 @@ CATMAID.tools = CATMAID.tools || {};
    * Returns a new object having a field named after the id field of all objects
    * in the list parameter.
    */
-  tools.listToIdMap = (function() {
-
-    var build = function(o, e) {
+  tools.listToIdMap = (function () {
+    var build = function (o, e) {
       o[e.id] = e;
       return o;
     };
 
-    return function(list) {
-      return list.reduce(build, {});
+    return function (list) {
+      return list.reduce (build, {});
     };
-  })();
+  }) ();
 
   // Speed up calls to hasOwnProperty
   var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -572,12 +627,12 @@ CATMAID.tools = CATMAID.tools || {};
    * Returns true if the given object has any fields and false otherwise.
    * See also: http://stackoverflow.com/questions/4994201
    */
-  tools.isEmpty = function(obj) {
+  tools.isEmpty = function (obj) {
     // Null and undefined are "empty"
     if (obj == null) return true; // jshint ignore:line
 
     for (var key in obj) {
-      if (hasOwnProperty.call(obj, key)) return false;
+      if (hasOwnProperty.call (obj, key)) return false;
     }
 
     return true;
@@ -587,7 +642,7 @@ CATMAID.tools = CATMAID.tools || {};
    * Returns the passed in value if it is not undefined. Otherwise returns
    * passed in default.
    */
-  tools.getDefined = function(value, fallback) {
+  tools.getDefined = function (value, fallback) {
     return undefined === value ? fallback : value;
   };
 
@@ -595,32 +650,32 @@ CATMAID.tools = CATMAID.tools || {};
    * Make all letters except the first of the second parameter lower case. Used
    * by cloneNode() function.
    */
-  var camelize = function(a,b){
-      return b.toUpperCase();
+  var camelize = function (a, b) {
+    return b.toUpperCase ();
   };
 
   /**
    * Clone a DOM node and apply the currently computed style. All child nodes
    * are copied as well.
    */
-  tools.cloneNode = function(element, copyStyle) {
-    var copy = element.cloneNode(false);
+  tools.cloneNode = function (element, copyStyle) {
+    var copy = element.cloneNode (false);
     // Add style information
     if (copyStyle && Node.ELEMENT_NODE === element.nodeType) {
-      var computedStyle = window.getComputedStyle(element, null);
+      var computedStyle = window.getComputedStyle (element, null);
       var target = copy.style;
       for (var i = 0, l = computedStyle.length; i < l; i++) {
-          var prop = computedStyle[i];
-          var camel = prop.replace(/\-([a-z])/g, camelize);
-          var val = computedStyle.getPropertyValue(prop);
-          target[camel] = val;
+        var prop = computedStyle[i];
+        var camel = prop.replace (/\-([a-z])/g, camelize);
+        var val = computedStyle.getPropertyValue (prop);
+        target[camel] = val;
       }
     }
 
-    for (var i=0, length=element.childNodes.length; i<length; ++i) {
+    for (var i = 0, length = element.childNodes.length; i < length; ++i) {
       var child = element.childNodes[i];
-      var childClone = CATMAID.tools.cloneNode(child, copyStyle);
-      copy.appendChild(childClone);
+      var childClone = CATMAID.tools.cloneNode (child, copyStyle);
+      copy.appendChild (childClone);
     }
 
     return copy;
@@ -629,28 +684,28 @@ CATMAID.tools = CATMAID.tools || {};
   /**
    * Print a HTML element.
    */
-  tools.printElement = function(element) {
+  tools.printElement = function (element) {
     // Add table to new window
-    var printWindow = window.open("");
+    var printWindow = window.open ('');
     if (!printWindow) {
-      CATMAID.warn("Couldn't open new window for printing");
+      CATMAID.warn ("Couldn't open new window for printing");
       return;
     }
-    var clone = CATMAID.tools.cloneNode(element, true);
-    var printHTML = "<html><body></body></html>";
-    printWindow.document.write("<html><body></body></html>");
-    printWindow.document.body.appendChild(clone);
+    var clone = CATMAID.tools.cloneNode (element, true);
+    var printHTML = '<html><body></body></html>';
+    printWindow.document.write ('<html><body></body></html>');
+    printWindow.document.body.appendChild (clone);
 
-    printWindow.print();
-    printWindow.close();
+    printWindow.print ();
+    printWindow.close ();
   };
 
   /**
    * Apply thr trim() function to a string. Makes is possible to be used in
    * map/etc.
    */
-  tools.trimString = function(str) {
-    return str.trim();
+  tools.trimString = function (str) {
+    return str.trim ();
   };
 
   /**
@@ -663,7 +718,7 @@ CATMAID.tools = CATMAID.tools || {};
     if (a.size !== b.size) return false;
 
     for (var member of a) {
-      if (!b.has(member)) return false;
+      if (!b.has (member)) return false;
     }
 
     return true;
@@ -673,7 +728,7 @@ CATMAID.tools = CATMAID.tools || {};
    * Copy all fields from a default object to a target that are undefined in the
    * target.
    */
-  tools.updateFromDefaults = function(target, defaults) {
+  tools.updateFromDefaults = function (target, defaults) {
     for (var key in defaults) {
       var value = target[key];
       if (undefined === value) {
@@ -684,9 +739,19 @@ CATMAID.tools = CATMAID.tools || {};
     return target;
   };
 
-  tools.getDateSuffix = function() {
-    var now = new Date();
-    return now.getFullYear() + '-' + now.getMonth() + '-' + now.getDay() + '-' + now.getHours() + '-' + now.getMinutes();
+  tools.getDateSuffix = function () {
+    var now = new Date ();
+    return (
+      now.getFullYear () +
+      '-' +
+      now.getMonth () +
+      '-' +
+      now.getDay () +
+      '-' +
+      now.getHours () +
+      '-' +
+      now.getMinutes ()
+    );
   };
 
   /**
@@ -696,14 +761,14 @@ CATMAID.tools = CATMAID.tools || {};
    * to positive infinity. If the value is out of bounds, null is returned as
    * well.
    */
-  tools.validateNumber = function(number, errorMessage, min, max) {
+  tools.validateNumber = function (number, errorMessage, min, max) {
     if (!number) return null;
-    var min = typeof(min) === "number" ? min : -Infinity;
-    var max = typeof(max) === "number" ? max : Infinity;
+    var min = typeof min === 'number' ? min : -Infinity;
+    var max = typeof max === 'number' ? max : Infinity;
     var value = +number; // cast
-    if (Number.isNaN(value) || value < min || value > max) {
+    if (Number.isNaN (value) || value < min || value > max) {
       if (errorMessage) {
-        CATMAID.warn(errorMessage);
+        CATMAID.warn (errorMessage);
       }
       return null;
     }
@@ -714,14 +779,14 @@ CATMAID.tools = CATMAID.tools || {};
    * Test if two arrays are exactly the same, i.e. they are defined and have the
    * same elements in the same order.
    */
-  tools.arraysEqual = function(a, b) {
+  tools.arraysEqual = function (a, b) {
     if (!a || !b) {
       return false;
     }
     if (a.length !== b.length) {
       return false;
     }
-    for (var i=0, imax=a.length; i<imax; ++i) {
+    for (var i = 0, imax = a.length; i < imax; ++i) {
       if (a[i] !== b[i]) {
         return false;
       }
@@ -733,17 +798,19 @@ CATMAID.tools = CATMAID.tools || {};
    * Create a UUIDv4 based on Math.random. From:
    * https://stackoverflow.com/questions/105034
    */
-  tools.uuidv4 = function() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
+  tools.uuidv4 = function () {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace (/[xy]/g, function (
+      c
+    ) {
+      var r = (Math.random () * 16) | 0, v = c == 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString (16);
     });
   };
 
   /**
    * Quote the passed in string;
    */
-  tools.quote = function(text) {
+  tools.quote = function (text) {
     return '"' + text + '"';
   };
 
@@ -753,32 +820,37 @@ CATMAID.tools = CATMAID.tools || {};
    * r, g, and b. Everything else is just passed to the THREE.Color()
    * constructor.
    */
-  tools.getColor = function(value) {
-    var type = typeof(value);
-    if (type === "object") {
-      return new THREE.Color(value.r, value.g, value.b);
-    } else if (type === "number") {
+  tools.getColor = function (value) {
+    var type = typeof value;
+    if (type === 'object') {
+      return new THREE.Color (value.r, value.g, value.b);
+    } else if (type === 'number') {
       // This is done not through the constructor, because a passed in number
       // isn't treated as hex value.
-      var color = new THREE.Color();
-      color.setHex(value);
+      var color = new THREE.Color ();
+      color.setHex (value);
       return color;
-
     }
-    return new THREE.Color(value);
+    return new THREE.Color (value);
   };
 
   /**
    * Copy the passed in text to the clipboard.
    */
-  tools.copyToClipBoard = function(text) {
-    var input = document.createElement('input');
-    input.setAttribute('value', text);
-    document.body.appendChild(input);
-    input.select();
-    var result = document.execCommand('copy');
-    document.body.removeChild(input);
+  tools.copyToClipBoard = function (text) {
+    var input = document.createElement ('input');
+    input.setAttribute ('value', text);
+    document.body.appendChild (input);
+    input.select ();
+    var result = document.execCommand ('copy');
+    document.body.removeChild (input);
     return result;
   };
 
-})(CATMAID.tools);
+  tools.buildObject = function (keys, values) {
+    return keys.reduce (function (obj, k, i) {
+      obj[k] = values[i];
+      return obj;
+    }, {});
+  };
+}) (CATMAID.tools);

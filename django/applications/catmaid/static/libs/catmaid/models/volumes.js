@@ -21,7 +21,7 @@
      */
     listAll: function(projectId) {
       var url = projectId + '/volumes/';
-      return CATMAID.fetch(url, 'GET');
+      return CATMAID.fetch(url, 'GET')
     },
 
     /**
