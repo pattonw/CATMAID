@@ -58,7 +58,7 @@
     var volumeSelectionWrapper = document.createElement('span');
     let volumeSelection;
     if (options.label){
-      volumeSelection = CATMAID.DOM.createLabeledAsyncPlaceholder(options.label, initVolumeList(options), options.title);
+      volumeSelection = CATMAID.DOM.createLabeledAsyncPlaceholder(options.label, initVolumeList(options), options.title).get(0);
     } else {
       volumeSelection = CATMAID.DOM.createAsyncPlaceholder(initVolumeList(options));
     }
