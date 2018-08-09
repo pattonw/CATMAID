@@ -5,6 +5,7 @@ from catmaid.control.nat import export_skeleton_as_nrrd_async
 from catmaid.control.treenodeexport import process_export_job
 from catmaid.control.roi import create_roi_image
 from catmaid.control.node import update_node_query_cache as do_update_node_query_cache
+from catmaid.control.floodfilling import flood_fill_async
 from celery import shared_task
 
 
