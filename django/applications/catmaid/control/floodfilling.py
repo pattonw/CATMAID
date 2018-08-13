@@ -39,31 +39,34 @@ def flood_fill_skeleton(request):
 
     # the name of the temporary directory used for files
     # related to flood filling
-    temp_dir_name = "ff_temp"
+    job_name = request.POST["job_name"]
 
     # If the temporary directory doesn't exist, create it
     media_folder = Path(settings.MEDIA_ROOT)
-    if not (media_folder / temp_dir_name).exists():
-        (media_folder / temp_dir_name).mkdir()
-    temp_dir = media_folder / temp_dir_name
+    if not (media_folder / job_name).exists():
+        (media_folder / job_name).mkdir()
+    temp_dir = media_folder / job_name
 
     # Create a copy of the files sent in the request in the
     # temporary directory so that it can be copied with scp
     # in the async function
     for f in request.FILES.values():
+        print(f.name)
         file_path = temp_dir / f.name
         file_path.write_text(f.read().decode("utf-8"))
 
     # HARD-CODED SETTINGS
     # TODO: move these to appropriate locations
-    server = "cardona-gpu1.int.janelia.org"
-    server_diluvian_dir = "code/diluvian"
-    server_env_path = ".virtualenv/cardona-gpu1-py35-tf18/bin/activate"
-    ssh_key_path = "/home/pattonw/.ssh/id_rsa"
-    model_file = "trained_models/pattonw-v0/pattonw-v0.hdf5"
-    output_file_name = "output_file"
-    server_temp_dir = "holding_dir"
+    server = "cardona-gpu1.int.janelia.org"  # table
+    server_diluvian_dir = "code/diluvian"  # table
+    server_env_path = ".virtualenv/cardona-gpu1-py35-tf18/bin/activate"  # table
+    ssh_key_path = settings.SSH_KEY_PATH
+    model_file = "trained_models/pattonw-v0/pattonw-v0.hdf5"  # widget settings
+    output_file_name = "output_file"  # widget settings
+    flood_filling_data_dir = "holding_dir/"
+    job_dir = job_name  # widget settings
 
+    # Flood filling async function
     flood_fill_async.delay(
         request.user.id,
         temp_dir,
@@ -72,10 +75,12 @@ def flood_fill_skeleton(request):
         server_env_path,
         model_file,
         output_file_name,
-        server_temp_dir,
+        flood_filling_data_dir,
         ssh_key_path,
+        job_dir,
     )
 
+    # Send a response to let the user know the async funcion has started
     return JsonResponse({"success": True})
 
 
@@ -90,24 +95,22 @@ def flood_fill_async(
     output_file_name,
     server_temp_dir,
     ssh_key_path,
+    job_dir,
 ):
 
-    # TODO: Setup, i.e. scp the files onto the server.
-    setup = ""
+    setup = "scp -i {ssh_key_path} -pr {local_dir} {gpu_server}:{diluvian_dir}/{server_temp_dir}".format(
+        **{
+            "local_dir": temp_dir,
+            "gpu_server": server,
+            "diluvian_dir": diluvian_dir,
+            "server_temp_dir": server_temp_dir,
+            "ssh_key_path": ssh_key_path,
+        }
+    )
     files = {}
     for f in temp_dir.iterdir():
-        files[f.name.split(".")[0]] = Path("~/", diluvian_dir, server_temp_dir, f.name)
-        setup = (
-            setup
-            + "scp -i {ssh_key_path} {file_path} {gpu_server}:{diluvian_dir}/{server_temp_dir}\n".format(
-                **{
-                    "file_path": str(f),
-                    "gpu_server": server,
-                    "diluvian_dir": diluvian_dir,
-                    "server_temp_dir": server_temp_dir,
-                    "ssh_key_path": ssh_key_path,
-                }
-            )
+        files[f.name.split(".")[0]] = Path(
+            "~/", diluvian_dir, server_temp_dir, job_dir, f.name
         )
 
     flood_fill = """
@@ -132,6 +135,7 @@ def flood_fill_async(
     scp -i {ssh_key_path} {server}:{diluvian_dir}/{output_file_name}.npy {temp_dir}
     ssh -i {ssh_key_path} {server}
     rm  {diluvian_dir}/{output_file_name}.npy
+    rm -r {diluvian_dir}/{server_temp_dir}/{job_dir}
     """.format(
         **{
             "server": server,
@@ -139,6 +143,8 @@ def flood_fill_async(
             "temp_dir": temp_dir,
             "output_file_name": output_file_name,
             "ssh_key_path": ssh_key_path,
+            "server_temp_dir": server_temp_dir,
+            "job_dir": job_dir,
         }
     )
 
