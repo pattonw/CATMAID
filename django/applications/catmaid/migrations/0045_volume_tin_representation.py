@@ -116,7 +116,7 @@ backward = """
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('catmaid', '0041_add_sampler_column_leaf_handling'),
+        ('catmaid', '0044_wrap_skeleton_summary_update_in_function'),
     ]
 
     operations = [
