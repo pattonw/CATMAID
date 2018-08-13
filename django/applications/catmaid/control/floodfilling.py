@@ -45,39 +45,39 @@ def flood_fill_skeleton(request):
     media_folder = Path(settings.MEDIA_ROOT)
     if not (media_folder / job_name).exists():
         (media_folder / job_name).mkdir()
-    temp_dir = media_folder / job_name
+    local_temp_der = media_folder / job_name
 
     # Create a copy of the files sent in the request in the
     # temporary directory so that it can be copied with scp
     # in the async function
     for f in request.FILES.values():
         print(f.name)
-        file_path = temp_dir / f.name
+        file_path = local_temp_der / f.name
         file_path.write_text(f.read().decode("utf-8"))
 
     # HARD-CODED SETTINGS
     # TODO: move these to appropriate locations
     server = "cardona-gpu1.int.janelia.org"  # table
     server_diluvian_dir = "code/diluvian"  # table
-    server_env_path = ".virtualenv/cardona-gpu1-py35-tf18/bin/activate"  # table
+    server_ff_env_path = ".virtualenv/cardona-gpu1-py35-tf18/bin/activate"  # table
     ssh_key_path = settings.SSH_KEY_PATH
     model_file = "trained_models/pattonw-v0/pattonw-v0.hdf5"  # widget settings
     output_file_name = "output_file"  # widget settings
-    flood_filling_data_dir = "holding_dir/"
-    job_dir = job_name  # widget settings
+    server_async_dir = "holding_dir/"
+    server_job_dir = job_name  # widget settings
 
     # Flood filling async function
     flood_fill_async.delay(
         request.user.id,
-        temp_dir,
+        ssh_key_path,
+        local_temp_der,
         server,
+        server_ff_env_path,
         server_diluvian_dir,
-        server_env_path,
+        server_async_dir,
+        server_job_dir,
         model_file,
         output_file_name,
-        flood_filling_data_dir,
-        ssh_key_path,
-        job_dir,
     )
 
     # Send a response to let the user know the async funcion has started
@@ -87,42 +87,42 @@ def flood_fill_skeleton(request):
 @task()
 def flood_fill_async(
     user_id,
-    temp_dir,
+    ssh_key_path,
+    local_temp_der,
     server,
-    diluvian_dir,
-    env_path,
+    server_ff_env_path,
+    server_diluvian_dir,
+    server_async_dir,
+    server_job_dir,
     model_file,
     output_file_name,
-    server_temp_dir,
-    ssh_key_path,
-    job_dir,
 ):
 
-    setup = "scp -i {ssh_key_path} -pr {local_dir} {gpu_server}:{diluvian_dir}/{server_temp_dir}".format(
+    setup = "scp -i {ssh_key_path} -pr {local_dir} {gpu_server}:{server_diluvian_dir}/{server_async_dir}".format(
         **{
-            "local_dir": temp_dir,
+            "local_dir": local_temp_der,
             "gpu_server": server,
-            "diluvian_dir": diluvian_dir,
-            "server_temp_dir": server_temp_dir,
+            "server_diluvian_dir": server_diluvian_dir,
+            "server_async_dir": server_async_dir,
             "ssh_key_path": ssh_key_path,
         }
     )
     files = {}
-    for f in temp_dir.iterdir():
+    for f in local_temp_der.iterdir():
         files[f.name.split(".")[0]] = Path(
-            "~/", diluvian_dir, server_temp_dir, job_dir, f.name
+            "~/", server_diluvian_dir, server_async_dir, server_job_dir, f.name
         )
 
     flood_fill = """
     ssh -i {ssh_key_path} {server}
-    source {env_path}
-    cd  {diluvian_dir}
+    source {server_ff_env_path}
+    cd  {server_diluvian_dir}
     python -m diluvian skeleton-fill-parallel -s {skeleton_file} -m {model_file} -c {config_file} -v {volume_file} --no-in-memory -l INFO --max-moves 3
     """.format(
         **{
             "server": server,
-            "env_path": env_path,
-            "diluvian_dir": diluvian_dir,
+            "server_ff_env_path": server_ff_env_path,
+            "server_diluvian_dir": server_diluvian_dir,
             "skeleton_file": files["skeleton"],
             "model_file": model_file,
             "config_file": files["config"],
@@ -132,19 +132,19 @@ def flood_fill_async(
     )
 
     cleanup = """
-    scp -i {ssh_key_path} {server}:{diluvian_dir}/{output_file_name}.npy {temp_dir}
+    scp -i {ssh_key_path} {server}:{server_diluvian_dir}/{output_file_name}.npy {local_temp_der}
     ssh -i {ssh_key_path} {server}
-    rm  {diluvian_dir}/{output_file_name}.npy
-    rm -r {diluvian_dir}/{server_temp_dir}/{job_dir}
+    rm  {server_diluvian_dir}/{output_file_name}.npy
+    rm -r {server_diluvian_dir}/{server_async_dir}/{server_job_dir}
     """.format(
         **{
             "server": server,
-            "diluvian_dir": diluvian_dir,
-            "temp_dir": temp_dir,
+            "server_diluvian_dir": server_diluvian_dir,
+            "local_temp_der": local_temp_der,
             "output_file_name": output_file_name,
             "ssh_key_path": ssh_key_path,
-            "server_temp_dir": server_temp_dir,
-            "job_dir": job_dir,
+            "server_async_dir": server_async_dir,
+            "server_job_dir": server_job_dir,
         }
     )
 
