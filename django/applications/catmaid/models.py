@@ -1486,3 +1486,16 @@ def notify_user(user, title, message):
         user.email_user('[CATMAID] ' + title, message)
     except Exception as e:
         logging.getLogger(__name__).error('Failed to send e-mail (%s)', str(e))
+
+class ComputeServer(models.Model):
+    name = models.TextField()
+    address = models.TextField()
+    edition_time = models.DateTimeField(default=timezone.now)
+    editor = models.ForeignKey(User, on_delete=models.CASCADE,
+                               related_name='compute_server_editor', db_column='editor_id')
+
+    class Meta:
+        db_table = "compute_server"
+
+    def __str__(self):
+        return self.name
