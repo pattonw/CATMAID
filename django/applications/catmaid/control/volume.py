@@ -145,7 +145,7 @@ class TriangleMeshVolume(PostGISVolume):
     def __init__(self, project_id, user_id, options):
         super(TriangleMeshVolume, self).__init__(project_id, user_id, options)
         input_mesh = options.get("mesh", None)
-        if input_mesh:
+        if input_mesh is not None:
             mesh_type = type(input_mesh)
             if list == mesh_type:
                 self.mesh = input_mesh
