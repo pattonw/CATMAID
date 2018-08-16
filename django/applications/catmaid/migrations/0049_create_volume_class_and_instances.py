@@ -103,7 +103,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('catmaid', '0045_volume_tin_representation'),
+        ('catmaid', '0048_volume_tin_representation'),
     ]
 
     operations = [
