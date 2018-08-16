@@ -325,7 +325,7 @@ urlpatterns += [
 
 # Celery Tasks
 urlpatterns += [
-    url(r'^(?P<project_id>\d+)/tasks$', celery_task.get_tasks),
+    url(r'^(?P<project_id>\d+)/tasks$', celery_task.get_active_tasks),
     url(r'^(?P<project_id>\d+)/create-task$', celery_task.create_task),
 ]
 
