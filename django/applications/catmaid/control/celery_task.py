@@ -25,8 +25,8 @@ def get_active_tasks(request, project_id):
 @api_view(["POST"])
 @requires_user_role(UserRole.Browse)
 def create_task(request, project_id):
-    x = slow_async.delay(request.POST.get('time',60))
-    return JsonResponse({'task': x.task_id})
+    x = slow_async.delay(request.POST.get("time", 60))
+    return JsonResponse({"task": x.task_id})
 
 
 @task()
