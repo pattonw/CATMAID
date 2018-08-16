@@ -5,14 +5,9 @@ from pathlib import Path
 
 from django.conf import settings
 from django.http import JsonResponse
-from django.db import connection
 
 from catmaid.control.compute_server import get_server
-from catmaid.control.volume import (
-    get_volume_instance,
-    _stl_ascii_to_indexed_triangles,
-    TriangleMeshVolume,
-)
+from catmaid.control.volume import get_volume_instance
 from catmaid.control.authentication import requires_user_role
 from catmaid.models import Message, User, UserRole
 from catmaid.control.message import notify_user
@@ -23,15 +18,13 @@ from celery.task import task
 
 from rest_framework.decorators import api_view
 
-import time
-
 
 # The path were server side exported files get stored in
 output_path = Path(settings.MEDIA_ROOT, settings.MEDIA_EXPORT_SUBDIRECTORY)
 
 
 @api_view(["POST"])
-@requires_user_role(UserRole.Browse)
+@requires_user_role(UserRole.QueueComputeTask)
 def flood_fill_skeleton(request, project_id):
     """
     Flood fill a skeleton. Necessary information:
@@ -89,7 +82,7 @@ def flood_fill_skeleton(request, project_id):
     )
 
     # Send a response to let the user know the async funcion has started
-    return JsonResponse({"success": True})
+    return JsonResponse({"task_id": x.task_id})
 
 
 @task()
