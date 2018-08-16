@@ -5,11 +5,19 @@ from pathlib import Path
 
 from django.conf import settings
 from django.http import JsonResponse
+from django.db import connection
 
 from catmaid.control.compute_server import get_server
+from catmaid.control.volume import (
+    get_volume_instance,
+    _stl_ascii_to_indexed_triangles,
+    TriangleMeshVolume,
+)
 from catmaid.control.authentication import requires_user_role
 from catmaid.models import Message, User, UserRole
 from catmaid.control.message import notify_user
+
+import numpy as np
 
 from celery.task import task
 
@@ -50,13 +58,13 @@ def flood_fill_skeleton(request, project_id):
     media_folder = Path(settings.MEDIA_ROOT)
     if not (media_folder / job_name).exists():
         (media_folder / job_name).mkdir()
-    local_temp_der = media_folder / job_name
+    local_temp_dir = media_folder / job_name
 
     # Create a copy of the files sent in the request in the
     # temporary directory so that it can be copied with scp
     # in the async function
     for f in request.FILES.values():
-        file_path = local_temp_der / f.name
+        file_path = local_temp_dir / f.name
         file_path.write_text(f.read().decode("utf-8"))
 
     # HARD-CODED SETTINGS
@@ -69,9 +77,10 @@ def flood_fill_skeleton(request, project_id):
 
     # Flood filling async function
     x = flood_fill_async.delay(
+        project_id,
         request.user.id,
         ssh_key_path,
-        local_temp_der,
+        local_temp_dir,
         server,
         server_async_dir,
         server_job_dir,
@@ -85,21 +94,20 @@ def flood_fill_skeleton(request, project_id):
 
 @task()
 def flood_fill_async(
+    project_id,
     user_id,
     ssh_key_path,
-    local_temp_der,
+    local_temp_dir,
     server,
     server_async_dir,
     server_job_dir,
     model_file,
     output_file_name,
 ):
-    time.sleep(60)
-    return 4
 
     setup = "scp -i {ssh_key_path} -pr {local_dir} {server_address}:{server_diluvian_dir}/{server_async_dir}".format(
         **{
-            "local_dir": local_temp_der,
+            "local_dir": local_temp_dir,
             "server_address": server["address"],
             "server_diluvian_dir": server["diluvian_path"],
             "server_async_dir": server_async_dir,
@@ -107,7 +115,7 @@ def flood_fill_async(
         }
     )
     files = {}
-    for f in local_temp_der.iterdir():
+    for f in local_temp_dir.iterdir():
         files[f.name.split(".")[0]] = Path(
             "~/", server["diluvian_path"], server_async_dir, server_job_dir, f.name
         )
@@ -131,7 +139,7 @@ def flood_fill_async(
     )
 
     cleanup = """
-    scp -i {ssh_key_path} {server}:{server_diluvian_dir}/{output_file_name}.npy {local_temp_der}
+    scp -i {ssh_key_path} {server}:{server_diluvian_dir}/{output_file_name}.npy {local_temp_dir}
     ssh -i {ssh_key_path} {server}
     rm  {server_diluvian_dir}/{output_file_name}.npy
     rm -r {server_diluvian_dir}/{server_async_dir}/{server_job_dir}
@@ -139,7 +147,7 @@ def flood_fill_async(
         **{
             "server": server["address"],
             "server_diluvian_dir": server["diluvian_path"],
-            "local_temp_der": local_temp_der,
+            "local_temp_dir": local_temp_dir,
             "output_file_name": output_file_name,
             "ssh_key_path": ssh_key_path,
             "server_async_dir": server_async_dir,
@@ -167,7 +175,13 @@ def flood_fill_async(
     out, err = process.communicate(cleanup)
     print(out)
 
-    if True:
+    # actually import the volume into the database
+    if False:
+        importFloodFilledVolume(
+            project_id, user_id, "{}/{}.npy".format(local_temp_dir, output_file_name)
+        )
+
+    if False:
         msg = Message()
         msg.user = User.objects.get(pk=int(user_id))
         msg.read = False
@@ -178,4 +192,21 @@ def flood_fill_async(
 
         notify_user(user_id, msg.id, msg.title)
 
-    return "new hello world!"
+    return "complete"
+
+
+def importFloodFilledVolume(project_id, user_id, ff_output_file):
+    x = np.load(ff_output_file)
+    verts = x[0]
+    faces = x[1]
+    verts = [[x * 2000 for x in v] for v in verts]
+    faces = [list(f) for f in faces]
+
+    x = [verts, faces]
+
+    options = {"type": "trimesh", "mesh": x, "title": "experimental_skeletons2"}
+    volume = get_volume_instance(project_id, user_id, options)
+    volume.save()
+
+    return JsonResponse({"success": True})
+
